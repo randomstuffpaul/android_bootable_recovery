@@ -148,6 +148,7 @@ endif
 
 LOCAL_C_INCLUDES += \
     system/vold \
+    external/e2fsprogs/lib
 
 LOCAL_STATIC_LIBRARIES := \
     libmksh_driver \
@@ -157,6 +158,8 @@ LOCAL_STATIC_LIBRARIES := \
     libbootloader_message \
     libfs_mgr \
     libext4_utils \
+    libext2_blkid \
+    libext2_uuid \
     libsparse \
     libreboot \
     libziparchive \
@@ -265,6 +268,8 @@ LOCAL_CFLAGS += -DMINIVOLD
 LOCAL_CFLAGS += -Wno-unused-parameter
 LOCAL_STATIC_LIBRARIES += \
     libext4_utils \
+    libext2_blkid \
+    libext2_uuid \
     libsparse \
     libmounts \
     libz \
@@ -291,7 +296,8 @@ LOCAL_C_INCLUDES += \
     external/libtar/listhash \
     external/openssl/include \
     external/zlib \
-    bionic/libc/bionic
+    bionic/libc/bionic \
+    external/e2fsprogs/lib
 
 include $(BUILD_EXECUTABLE)
 
