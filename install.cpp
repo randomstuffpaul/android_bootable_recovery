@@ -591,6 +591,7 @@ static int really_install_package(std::string path, bool* wipe_cache, bool needs
       ensure_path_mounted(path.substr(1).c_str());
     } else {
       ensure_path_mounted(path.c_str());
+      remount_no_selinux(path.c_str());
     }
   }
 
