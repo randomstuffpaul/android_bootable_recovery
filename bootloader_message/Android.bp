@@ -14,6 +14,8 @@
 // limitations under the License.
 //
 
+ifneq ($(BOARD_PROVIDES_BOOTLOADER_MESSAGE),true)
+
 cc_library_static {
     name: "libbootloader_message",
     srcs: ["bootloader_message.cpp"],
@@ -24,3 +26,5 @@ cc_library_static {
     ],
     export_include_dirs: ["include"],
 }
+
+endif
