@@ -1793,6 +1793,8 @@ int main(int argc, char **argv) {
 
     sync();
 
+    ui->Stop();
+
     switch (after) {
         case Device::SHUTDOWN:
             ui->Print("Shutting down...\n");
