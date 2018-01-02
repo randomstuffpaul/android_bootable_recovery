@@ -44,7 +44,8 @@ LOCAL_STATIC_LIBRARIES := \
 	libc++_static \
 	libz \
 	libc \
-	libm
+	libm \
+	libbase
 
 FSTOOLS_LINKS := \
 	e2fsck mke2fs tune2fs fsck.ext4 mkfs.ext4 \
