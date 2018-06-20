@@ -845,6 +845,15 @@ static bool yes_no(Device* device, const char* question1, const char* question2)
     return (chosen_item == 1);
 }
 
+static bool ask_to_continue_unverified_install(Device* device) {
+#ifdef RELEASE_BUILD
+    return false;
+#else
+    ui->SetProgressType(RecoveryUI::EMPTY);
+    return yes_no(device, "Signature verification failed", "Install anyway?");
+#endif
+}
+
 static bool ask_to_wipe_data(Device* device) {
     return yes_no(device, "Wipe all user data?", "  THIS CAN NOT BE UNDONE!");
 }
@@ -1169,7 +1178,12 @@ static int apply_from_sdcard(Device* device, bool* wipe_cache) {
     void* token = start_sdcard_fuse(path.c_str());
 
     int status = install_package(FUSE_SIDELOAD_HOST_PATHNAME, wipe_cache,
-                                 TEMPORARY_INSTALL_FILE, false, 0/*retry_count*/);
+                                 TEMPORARY_INSTALL_FILE, false, 0/*retry_count*/, true/*verify*/);
+
+    if (status == INSTALL_UNVERIFIED && ask_to_continue_unverified_install(device)) {
+        status = install_package(FUSE_SIDELOAD_HOST_PATHNAME, wipe_cache, TEMPORARY_INSTALL_FILE,
+                                 false, 0/*retry_count*/, false/*verify*/);
+    }
 
     finish_sdcard_fuse(token);
     ensure_path_unmounted(SDCARD_ROOT);
@@ -1243,7 +1257,10 @@ static Device::BuiltinAction prompt_and_wait(Device* device, int status) {
         {
           bool adb = (chosen_action == Device::APPLY_ADB_SIDELOAD);
           if (adb) {
-            status = apply_from_adb(&should_wipe_cache, TEMPORARY_INSTALL_FILE);
+            status = apply_from_adb(&should_wipe_cache, TEMPORARY_INSTALL_FILE, true);
+            if (status == INSTALL_UNVERIFIED && ask_to_continue_unverified_install(device)) {
+              status = apply_from_adb(&should_wipe_cache, TEMPORARY_INSTALL_FILE, false);
+            }
           } else {
             status = apply_from_sdcard(device, &should_wipe_cache);
           }
@@ -1740,7 +1757,11 @@ int main(int argc, char **argv) {
       }
 
       status = install_package(update_package, &should_wipe_cache, TEMPORARY_INSTALL_FILE, true,
-                               retry_count);
+                               retry_count, true);
+      if (status == INSTALL_UNVERIFIED && ask_to_continue_unverified_install(device)) {
+        status = install_package(FUSE_SIDELOAD_HOST_PATHNAME, &should_wipe_cache,
+                                 TEMPORARY_INSTALL_FILE, true, retry_count, false);
+      }
       if (status == INSTALL_SUCCESS && should_wipe_cache) {
         wipe_cache(false, device);
       }
@@ -1801,7 +1822,10 @@ int main(int argc, char **argv) {
     if (!sideload_auto_reboot) {
       ui->ShowText(true);
     }
-    status = apply_from_adb(&should_wipe_cache, TEMPORARY_INSTALL_FILE);
+    status = apply_from_adb(&should_wipe_cache, TEMPORARY_INSTALL_FILE, true);
+    if (status == INSTALL_UNVERIFIED && ask_to_continue_unverified_install(device)) {
+      status = apply_from_adb(&should_wipe_cache, TEMPORARY_INSTALL_FILE, false);
+    }
     if (status == INSTALL_SUCCESS && should_wipe_cache) {
       if (!wipe_cache(false, device)) {
         status = INSTALL_ERROR;
